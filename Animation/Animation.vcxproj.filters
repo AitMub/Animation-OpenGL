@@ -38,7 +38,10 @@
     <ClInclude Include="input_process.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="lighting.h">
+    <ClInclude Include="light.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="render_scene.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

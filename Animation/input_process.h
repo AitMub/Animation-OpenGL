@@ -7,8 +7,10 @@
 
 #include "camera.h"
 #include "model.h"
+#include "render_scene.h"
 
-extern Camera camera;
+extern RenderScene* p_render_scene;
+
 
 float last_x = 0.0f;
 float last_y = 0.0f;
@@ -22,13 +24,13 @@ void ProcessInput(GLFWwindow* window){
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, delta_time);
+        p_render_scene->camera_.ProcessKeyboard(FORWARD, delta_time);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, delta_time);
+        p_render_scene->camera_.ProcessKeyboard(BACKWARD, delta_time);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, delta_time);
+        p_render_scene->camera_.ProcessKeyboard(LEFT, delta_time);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, delta_time);
+        p_render_scene->camera_.ProcessKeyboard(RIGHT, delta_time);
 }
 
 
@@ -56,11 +58,11 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
     last_x = xpos;
     last_y = ypos;
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+    p_render_scene->camera_.ProcessMouseMovement(xoffset, yoffset);
 }
 
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
-    camera.ProcessMouseScroll(static_cast<float>(yoffset));
+    p_render_scene->camera_.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 #endif
