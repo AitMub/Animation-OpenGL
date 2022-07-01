@@ -68,12 +68,16 @@ void Render(Shader& shader, const RenderScene& render_scene) {
     glm::mat4 view = p_render_scene->camera_.GetViewMatrix();
     shader.setMat4("projection", projection);
     shader.setMat4("view", view);
-
-    // render the loaded model
+    // model transformations
     glm::mat4 model_m = glm::mat4(1.0f);
-    model_m = glm::translate(model_m, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-    model_m = glm::scale(model_m, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+    model_m = glm::scale(model_m, glm::vec3(0.5f, 0.5f, 0.5f));	// scale it down
     shader.setMat4("model", model_m);
+    // light
+    shader.setVec3("lightColor", p_render_scene->light_.color_);
+    shader.setVec3("lightPos", p_render_scene->light_.pos_);
+    shader.setVec3("viewPos", p_render_scene->camera_.Position);
+
+    // render
     p_render_scene->model_.Draw(shader);
 }
 
