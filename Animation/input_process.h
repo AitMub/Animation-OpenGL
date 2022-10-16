@@ -24,13 +24,17 @@ void ProcessInput(GLFWwindow* window){
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        p_render_scene->camera_.ProcessKeyboard(FORWARD, delta_time * 100);
+        p_render_scene->camera_.ProcessKeyboard(FORWARD, delta_time);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        p_render_scene->camera_.ProcessKeyboard(BACKWARD, delta_time * 100);
+        p_render_scene->camera_.ProcessKeyboard(BACKWARD, delta_time);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        p_render_scene->camera_.ProcessKeyboard(LEFT, delta_time * 100);
+        p_render_scene->camera_.ProcessKeyboard(LEFT, delta_time);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        p_render_scene->camera_.ProcessKeyboard(RIGHT, delta_time * 100);
+        p_render_scene->camera_.ProcessKeyboard(RIGHT, delta_time);
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        p_render_scene->camera_.ProcessKeyboard(UP, delta_time);
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        p_render_scene->camera_.ProcessKeyboard(DOWN, delta_time);
 }
 
 
