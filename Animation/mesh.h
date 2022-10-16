@@ -12,7 +12,8 @@ using namespace std;
 
 #include "shader.h"
 
-#define MAX_BONE_INFLUENCE 4
+// could change to constexpr?
+const int kMaxBonePerVertex = 4;
 
 struct Vertex 
 {
@@ -21,10 +22,16 @@ struct Vertex
     glm::vec2 tex_coords;
     glm::vec3 tangent;
     glm::vec3 bitangent;
+
     //bone indexes which will influence this vertex
-    int m_BoneIDs[MAX_BONE_INFLUENCE];
+    int bone_id[kMaxBonePerVertex];
     //weights from each bone
-    float m_Weights[MAX_BONE_INFLUENCE];
+    float weights[kMaxBonePerVertex];
+
+    Vertex() {
+        fill_n(bone_id, kMaxBonePerVertex, -1);
+        fill_n(weights, kMaxBonePerVertex, -1.0f);
+    }
 };
 
 struct Texture 
@@ -43,11 +50,10 @@ public:
     vector<Texture>      textures_;
     unsigned int VAO_;
 
-
     Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures) {
-        this->vertices_ = vertices;
-        this->indices_ = indices;
-        this->textures_ = textures;
+        vertices_ = vertices;
+        indices_ = indices;
+        textures_ = textures;
 
         // now that we have all the required data, set the vertex buffers and its attribute pointers.
         SetupMesh();
@@ -131,11 +137,10 @@ private:
         glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, bitangent));
         // ids
         glEnableVertexAttribArray(5);
-        glVertexAttribIPointer(5, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, m_BoneIDs));
-
+        glVertexAttribIPointer(5, kMaxBonePerVertex, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, bone_id));
         // weights
         glEnableVertexAttribArray(6);
-        glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_Weights));
+        glVertexAttribPointer(6, kMaxBonePerVertex, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, weights));
         glBindVertexArray(0);
     }
 };

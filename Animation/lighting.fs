@@ -16,7 +16,7 @@ uniform sampler2D texture_diffuse1;
 void main()
 {    
     // ambient
-    float ambientStrength = 0.1;
+    float ambientStrength = 0.3;
     vec3 ambient = ambientStrength * lightColor;
   	
     // diffuse 
@@ -34,5 +34,5 @@ void main()
         
     vec3 objectColor = vec3(texture(texture_diffuse1, TexCoords));
     vec3 result = ambient +( diffuse + specular) * objectColor;
-    FragColor = vec4(result, 1.0);
+    FragColor = vec4(objectColor, 1.0);
 }

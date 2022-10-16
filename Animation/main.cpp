@@ -37,7 +37,7 @@ int main()
 
     Shader shader("lighting.vs", "lighting.fs");
 
-    p_render_scene = new RenderScene(Model("resource/nanosuit/nanosuit.obj"), Camera(glm::vec3(0.0f, 0.0f, 3.0f)));
+    p_render_scene = new RenderScene(Model("resource/bob/boblampclean.md5mesh"), Camera(glm::vec3(0.0f, 100.0f, 100.0f)));
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -57,26 +57,28 @@ int main()
 }
 
 void Render(Shader& shader, const RenderScene& render_scene) {
-    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+    glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // enable shader before setting uniforms
     shader.use();
 
     // view/projection transformations
-    glm::mat4 projection = glm::perspective(glm::radians(p_render_scene->camera_.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    glm::mat4 view = p_render_scene->camera_.GetViewMatrix();
+    mat4 projection = glm::perspective(glm::radians(p_render_scene->camera_.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
+    mat4 view = p_render_scene->camera_.GetViewMatrix();
     shader.setMat4("projection", projection);
     shader.setMat4("view", view);
     // model transformations
-    glm::mat4 model_m = glm::mat4(1.0f);
-    model_m = glm::scale(model_m, glm::vec3(0.5f, 0.5f, 0.5f));	// scale it down
+    mat4 model_m = mat4(1.0f);
+    model_m = glm::scale(model_m, glm::vec3(1.0f, 1.0f, 1.0f));	// scale it down
     shader.setMat4("model", model_m);
     // light
     shader.setVec3("lightColor", p_render_scene->light_.color_);
     shader.setVec3("lightPos", p_render_scene->light_.pos_);
     shader.setVec3("viewPos", p_render_scene->camera_.Position);
 
+    // calculate bone transform matrix
+    p_render_scene->model_.CalcBoneTransform(static_cast<float>(glfwGetTime()));
     // render
     p_render_scene->model_.Draw(shader);
 }
@@ -123,7 +125,7 @@ bool SetGLState() {
     glEnable(GL_DEPTH_TEST);
 
     // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
-    stbi_set_flip_vertically_on_load(true);
+    // stbi_set_flip_vertically_on_load(true);
 
     GLenum error = glGetError();
     if (error != GL_NO_ERROR)
