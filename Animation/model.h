@@ -2,7 +2,7 @@
 #define MODEL_H
 #define STB_IMAGE_IMPLEMENTATION
 
-#include <glad/glad.h> 
+#include <glad/glad.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -18,9 +18,13 @@ using glm::mat4;
 #include <iostream>
 #include <map>
 #include <vector>
-using namespace std;
+using std::string;
+using std::vector;
+using std::map;
 
 #include "mesh.h"
+#include "animation.h"
+#include "skeleton.h"
 
 unsigned int TextureFromFile(const char* path, const string& directory, bool gamma = false){
     string filename = string(path);
@@ -76,6 +80,9 @@ public:
 
     const aiScene* scene_;
 
+    vector<Animation> vec_anims_;
+    Skeleton skeleton_;
+
     Model(const string& model_path) {
         LoadModel(model_path);
     }
@@ -89,7 +96,6 @@ public:
     }
 
     void Draw(Shader& shader) const {
-
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "bones"), 75, GL_FALSE, glm::value_ptr(vec_bone_transform_[0]));
 
         for (unsigned int i = 0; i < vec_mesh_.size(); i++)
@@ -109,7 +115,7 @@ private:
 
         if (!scene_ || scene_->mFlags & AI_SCENE_FLAGS_INCOMPLETE || scene_->mRootNode == nullptr)
         {
-            cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << endl;
+            std::cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << std::endl;
             return;
         }
 
@@ -127,13 +133,10 @@ private:
         // process each mesh located at the current node
         for (unsigned int i = 0; i < node->mNumMeshes; i++)
         {
-            // the node object only contains indices to index the actual objects in the scene. 
-            // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
             vec_mesh_.push_back(processMesh(mesh, scene));
         }
 
-        // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
         for (unsigned int i = 0; i < node->mNumChildren; i++)
         {
             processNode(node->mChildren[i], scene);
@@ -516,19 +519,6 @@ private:
         glm::quat quat = glm::quat(ai_quat.w, ai_quat.x, ai_quat.y, ai_quat.z);
         return glm::mat4_cast(quat);
     }
-
-    void PrintMat4(const mat4& m) const {
-        for (int i = 0; i < 4; i++)
-        {
-            for (int j = 0; j < 4; j++)
-            {
-                cout << m[i][j] << "   ";
-            }
-            cout << endl;
-        }
-        cout << endl;
-    }
-
 };
 
 #endif

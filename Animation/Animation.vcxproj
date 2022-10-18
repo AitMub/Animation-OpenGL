@@ -143,9 +143,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Utility\opengl\glad-4.2\src\glad.c" />
+    <ClCompile Include="animation.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="skeleton.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="animation.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="input_process.h" />
     <ClInclude Include="light.h" />
@@ -153,6 +156,7 @@
     <ClInclude Include="model.h" />
     <ClInclude Include="render_scene.h" />
     <ClInclude Include="shader.h" />
+    <ClInclude Include="skeleton.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="lighting.fs" />
