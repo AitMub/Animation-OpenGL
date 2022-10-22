@@ -146,6 +146,7 @@
     <ClCompile Include="animation.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="skeleton.cpp" />
+    <ClCompile Include="utility\anim_math.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="animation.h" />
@@ -157,6 +158,7 @@
     <ClInclude Include="render_scene.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="skeleton.h" />
+    <ClInclude Include="utility\anim_math.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="lighting.fs" />
