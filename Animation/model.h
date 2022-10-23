@@ -25,6 +25,7 @@ using std::map;
 #include "mesh.h"
 #include "animation.h"
 #include "skeleton.h"
+#include "utility/anim_math.h"
 
 unsigned int TextureFromFile(const char* path, const string& directory, bool gamma = false){
     string filename = string(path);
@@ -80,9 +81,11 @@ public:
 
     const aiScene* scene_;
 
-    vector<Animation> vec_anims_;
-    Skeleton skeleton_;
+    vector<Animation*> vec_p_anims_;
+    Skeleton* p_skeleton_ = nullptr;
+    mat4 root_transform = mat4(1.0f);
 
+    
     Model(const string& model_path) {
         LoadModel(model_path);
     }
@@ -91,12 +94,23 @@ public:
         time *= 10;
         aiAnimation* anim = scene_->mAnimations[0];
         //float anim_time = fmod(time * anim->mTicksPerSecond , anim->mDuration / anim->mTicksPerSecond);
-        float anim_time = fmod(time, anim->mDuration);
+        float anim_time = fmod(time, vec_p_anims_[0]->total_frames_);
         CalcBoneTransformRecur(anim_time, scene_->mRootNode, anim, mat4(1.0f));
+        
+        p_skeleton_->CalcBoneAnimTransform(*vec_p_anims_[0], anim_time, root_transform);
+    }
+
+    void PlayAnimation(int anim_index, bool loop = true) {
+
+    }
+
+    void BlendAnimation(int anim_index1, int anim_index2, bool loop = true) {
+
     }
 
     void Draw(Shader& shader) const {
-        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "bones"), 75, GL_FALSE, glm::value_ptr(vec_bone_transform_[0]));
+        // glUniformMatrix4fv(glGetUniformLocation(shader.ID, "bones"), 75, GL_FALSE, glm::value_ptr(vec_bone_transform_[0]));
+        glUniformMatrix4fv(glGetUniformLocation(shader.ID, "bones"), 75, GL_FALSE, glm::value_ptr(p_skeleton_->final_bone_transform_[0]));
 
         for (unsigned int i = 0; i < vec_mesh_.size(); i++)
         {
@@ -122,29 +136,58 @@ private:
         // retrieve the directory path of the filepath
         model_directory_ = path.substr(0, path.find_last_of('/'));
 
-        // process ASSIMP's root node recursively
-        processNode(scene_->mRootNode, scene_);
+        // process ASSIMP's root node recursively and store child to parent relation
+        unordered_map<string, string> node_parent;
+        unordered_map<string, mat4> node_transform; // used to get root transform
+        ProcessNode(scene_->mRootNode, scene_, node_parent, node_transform);
+
+        // skeleton has been loaded and store child to parent relation into skeleton
+        if (p_skeleton_ != nullptr)
+        {
+            string bone_root = p_skeleton_->SetBoneChildToParent(node_parent);
+            root_transform = GetModelRootTransform(node_parent, node_transform, bone_root);
+        }
+
+        // load animation data
+        LoadAnimation();
+    }
+
+    mat4 GetModelRootTransform(const unordered_map<string, string>& node_parent, const unordered_map<string, mat4>& node_transform, const string& bone_root) {
+        if (bone_root == string()) return mat4(1.0f);
+
+        mat4 root_transform = mat4(1.0f);
+        string curr_child = bone_root;
+        while (node_parent.find(curr_child) != node_parent.end())
+        {
+            curr_child = node_parent.find(curr_child)->second;
+            root_transform = node_transform.find(curr_child)->second * root_transform;
+        }
+        return root_transform;
     }
 
 
     // processes a node in a recursive fashion
     // processes each individual mesh located at the node and repeats this process on its children nodes (if any)
-    void processNode(aiNode* node, const aiScene* scene) {
+    // and store child to parent relation
+    void ProcessNode(const aiNode* node, const aiScene* scene, unordered_map<string, string>& node_parent, unordered_map<string, mat4>& node_transform) {
+        node_transform[node->mName.data] = Convert<mat4>(node->mTransformation);
+
         // process each mesh located at the current node
         for (unsigned int i = 0; i < node->mNumMeshes; i++)
         {
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            vec_mesh_.push_back(processMesh(mesh, scene));
+            vec_mesh_.push_back(ProcessMesh(mesh, scene));
         }
 
         for (unsigned int i = 0; i < node->mNumChildren; i++)
         {
-            processNode(node->mChildren[i], scene);
+            ProcessNode(node->mChildren[i], scene, node_parent, node_transform);
+            node_parent[node->mChildren[i]->mName.data] = node->mName.data;
         }
     }
 
 
-    Mesh processMesh(aiMesh* mesh, const aiScene* scene) {
+    Mesh ProcessMesh(const aiMesh* mesh, const aiScene* scene) {
         // data to fill
         vector<Vertex> vertices;
         vector<unsigned int> indices;
@@ -199,18 +242,22 @@ private:
             vertices.push_back(vertex);
         }
 
-        // load bone info
+        // vertex bone info
         if (mesh->HasBones())
         {
-            LoadBoneInfoIntoVertex(mesh, vertices);
+            // load bone
+            if (p_skeleton_ == nullptr)
+            {
+                p_skeleton_ = new Skeleton();
+            }
+            p_skeleton_->LoadSkeletonAndRetrieveVertexInfo(mesh, vertices);
+             LoadBoneInfoIntoVertex(mesh, vertices);
         }
 
         // vertex indices.
         for (unsigned int i = 0; i < mesh->mNumFaces; i++)
         {
             aiFace face = mesh->mFaces[i];
-
-            // retrieve all indices of the face and store them in the indices vector
             for (unsigned int j = 0; j < face.mNumIndices; j++)
             {
                 indices.push_back(face.mIndices[j]);
@@ -285,6 +332,16 @@ private:
     }
 
 
+    void LoadAnimation() {
+        if (scene_->HasAnimations() == false) return;
+
+        for (int i = 0; i < scene_->mNumAnimations; i++)
+        {
+            Animation* p_anim = new Animation(scene_->mAnimations[i]);
+            vec_p_anims_.push_back(p_anim);
+        }
+    }
+
     void LoadBoneInfoIntoVertex(const aiMesh* mesh, vector<Vertex>& vertices) {
         for (unsigned int i = 0; i < mesh->mNumBones; i++)
         {
@@ -295,7 +352,7 @@ private:
             {
                 bone_index = bone_nums_++;
                 aiMatrix4x4 ai_mat_bone_offset = mesh->mBones[i]->mOffsetMatrix;
-                vec_bone_offset_.push_back(ConvertAiMatToGlmMat4(ai_mat_bone_offset));
+                vec_bone_offset_.push_back(Convert<mat4>(ai_mat_bone_offset));
                 vec_bone_transform_.push_back(mat4(1.0f));
                 bone_name_to_id_[bone_name] = bone_index;
             }
@@ -330,7 +387,7 @@ private:
 
     void CalcBoneTransformRecur(float time, const aiNode* node, const aiAnimation* anim, const mat4& parent_transform) {
         string node_name = node->mName.data;
-        mat4 node_transform = ConvertAiMatToGlmMat4(node->mTransformation);
+        mat4 node_transform = Convert<mat4>(node->mTransformation);
         
         for (int i = 0; i < anim->mNumChannels; i++)
         {
@@ -430,7 +487,7 @@ private:
         aiQuaternion ai_quat = Interpolate(node_anim->mRotationKeys[key_index1].mValue,
             node_anim->mRotationKeys[key_index2].mValue,
             factor);
-        return ConvertAiQuaternionToGlmMat4(ai_quat);
+        return Convert<mat4>(ai_quat);
     }
 
 
@@ -494,30 +551,6 @@ private:
     aiVector3D Interpolate(const aiVector3D& value1, const aiVector3D& value2, float factor) {
         aiVector3D ret;
         return (value2 - value1) * factor + value1;
-    }
-
-
-     
-
-
-    // utility
-    mat4 ConvertAiMatToGlmMat4(const aiMatrix4x4& ai_mat4) const {
-        mat4 mat = glm::mat4();
-
-        for (int i = 0; i < 4; i++)
-        {
-            for (int j = 0; j < 4; j++)
-            {
-                mat[j][i] = ai_mat4[i][j];
-            }
-        }
-
-        return mat;
-    }
-
-    mat4 ConvertAiQuaternionToGlmMat4(const aiQuaternion& ai_quat) const {
-        glm::quat quat = glm::quat(ai_quat.w, ai_quat.x, ai_quat.y, ai_quat.z);
-        return glm::mat4_cast(quat);
     }
 };
 
