@@ -33,7 +33,9 @@ float Convert(const aiVector3D& ai_vec);
 
 // Interpolate
 template<typename T>
-T Interpolate(const T& value1, const T& value2, float factor);
+T Interpolate(const T& value1, const T& value2, float factor) {
+    return (value2 - value1) * factor + value1;
+}
 
 template<>
 quat Interpolate<quat>(const quat& value1, const quat& value2, float factor);

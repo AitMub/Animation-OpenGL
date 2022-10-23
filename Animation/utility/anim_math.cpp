@@ -33,11 +33,8 @@ float Convert(const aiVector3D& ai_vec) {
     return ai_vec.x;
 }
 
-template<typename T>
-T Interpolate(const T& value1, const T& value2, float factor) {
-    return (value2 - value1) * factor + value1;
-}
 
-quat Interpolate(const quat& value1, const quat& value2, float factor) {
+template< >
+quat Interpolate<quat>(const quat& value1, const quat& value2, float factor) {
     return glm::slerp(value1, value2, factor);
 }
