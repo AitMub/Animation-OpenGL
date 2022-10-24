@@ -37,7 +37,7 @@ int main()
 
     Shader shader("lighting.vs", "lighting.fs");
 
-    p_render_scene = new RenderScene(Model("resource/bob/boblampclean.md5mesh"), Camera(glm::vec3(0.0f, 50.0f, 100.0f)));
+    p_render_scene = new RenderScene(Model("resource/T-Rex.glb"), Camera(glm::vec3(0.0f, 50.0f, 100.0f)));
 
     // render loop
     while (!glfwWindowShouldClose(window))
