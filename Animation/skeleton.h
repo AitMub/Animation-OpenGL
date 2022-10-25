@@ -43,6 +43,7 @@ public:
 	string SetBoneChildToParent(const unordered_map<string, string>& node_parent);
 
 	void CalcBoneAnimTransform(const Animation& animation, float time, const mat4& root_transform);
+	void BlendBoneAnimTransform(const Animation& anim1, const Animation& anim2, float normalized_time, float weight, const mat4& root_transform);
 
 	vector<mat4> final_bone_transform_;
 private:

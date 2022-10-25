@@ -63,10 +63,38 @@ void Skeleton::CalcBoneAnimTransform(const Animation& animation, float time, con
 		mat4 pos = glm::translate(mat4(1.0f), animation.GetPosition(vec_bone_[i].name, time));
 		mat4 rot = glm::mat4_cast(animation.GetRotation(vec_bone_[i].name, time));
 		// mat4 scale = glm::scale(mat4(1.0f), vec3(animation.GetScale(vec_bone_[i].name, time)));
+
 		int parent_i = vec_bone_[i].parent_index;
 		// check if this bone have parent
 		mat4 parent_mat = parent_i >= 0 ? vec_bone_[parent_i].transform : root_transform;
 		vec_bone_[i].transform = parent_mat * pos * rot;
+	}
+
+	// calculate final transform
+	final_bone_transform_.resize(vec_bone_.size());
+	for (int i = 0; i < vec_bone_.size(); i++)
+	{
+		final_bone_transform_[i] = vec_bone_[i].transform * vec_bone_[i].offset;
+	}
+}
+
+void Skeleton::BlendBoneAnimTransform(const Animation& anim1, const Animation& anim2, float normalized_time, float weight, const mat4& root_transform = mat4(1.0f)) {
+	// calculate hierarchy transform
+	for (int i = 0; i < vec_bone_.size(); i++)
+	{
+		mat4 pos1 = glm::translate(mat4(1.0f), anim1.GetPosition(vec_bone_[i].name, normalized_time));
+		mat4 rot1 = glm::mat4_cast(anim1.GetRotation(vec_bone_[i].name, normalized_time));
+
+		mat4 pos2 = glm::translate(mat4(1.0f), anim2.GetPosition(vec_bone_[i].name, normalized_time));
+		mat4 rot2 = glm::mat4_cast(anim2.GetRotation(vec_bone_[i].name, normalized_time));
+
+		pos1 = Interpolate(pos1, pos2, weight);
+		rot1 = Interpolate(rot1, rot2, weight);
+
+		int parent_i = vec_bone_[i].parent_index;
+		// check if this bone have parent
+		mat4 parent_mat = parent_i >= 0 ? vec_bone_[parent_i].transform : root_transform;
+		vec_bone_[i].transform = parent_mat * pos1 * rot1;
 	}
 
 	// calculate final transform
