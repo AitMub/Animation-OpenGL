@@ -20,8 +20,8 @@ enum Camera_Movement {
 // Default camera values
 const float YAW         = -90.0f;
 const float PITCH       =  0.0f;
-const float SPEED       =  50.0f;
-const float SENSITIVITY =  0.1f;
+const float SPEED       =  10.0f;
+const float SENSITIVITY =  0.5f;
 const float ZOOM        =  45.0f;
 
 
@@ -114,6 +114,16 @@ public:
             Zoom = 1.0f;
         if (Zoom > 45.0f)
             Zoom = 45.0f; 
+    }
+
+    void Rotate(float angle_x, float angle_y) 
+    {
+        glm::mat4 rotate_x = glm::rotate(glm::mat4(1.0f), glm::radians(angle_x * SENSITIVITY), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::vec4 pos = glm::vec4(Position, 1.0f);
+        Position = glm::vec3(pos * rotate_x);
+        Front = -Position;
+
+        // updateCameraVectors();
     }
 
 private:

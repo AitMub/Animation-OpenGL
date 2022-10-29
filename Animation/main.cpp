@@ -146,7 +146,8 @@ GLFWwindow*  Init() {
     // set callback function
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -175,9 +176,6 @@ bool SetGLState() {
 
     // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
     // stbi_set_flip_vertically_on_load(true);
-
-    //设置颜色风格
-    ImGui::StyleColorsDark();
 
     GLenum error = glGetError();
     if (error != GL_NO_ERROR)

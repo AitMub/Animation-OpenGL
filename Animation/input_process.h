@@ -12,9 +12,9 @@
 extern RenderScene* p_render_scene;
 
 
-float last_x = 0.0f;
-float last_y = 0.0f;
-bool first_mouse = true;
+bool left_pressing = false;
+bool right_pressing = false;
+bool begin = true;
 
 extern float delta_time;
 extern float last_frame;
@@ -45,24 +45,50 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 }
 
 
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
+void mouse_button_callback(GLFWwindow* window, int buttons, int action, int mode) {
+	if (action == GLFW_PRESS && buttons == GLFW_MOUSE_BUTTON_LEFT)
+	{
+		begin = true;//交互开始时begin可能不为1,会导致旋转时出现跳动,因此按下时设其为1
+		left_pressing = true;
+	}
+	if (action == GLFW_RELEASE && buttons == GLFW_MOUSE_BUTTON_LEFT)
+	{
+		left_pressing = false;
+	}
 
-    if (first_mouse)
-    {
-        last_x = xpos;
-        last_y = ypos;
-        first_mouse = false;
-    }
+	if (action == GLFW_PRESS && buttons == GLFW_MOUSE_BUTTON_RIGHT)
+	{
+		begin = true;
+		right_pressing = true;
+	}
+	if (action == GLFW_RELEASE && buttons == GLFW_MOUSE_BUTTON_RIGHT)
+	{
+		right_pressing = false;
+	}
+}
 
-    float xoffset = xpos - last_x;
-    float yoffset = last_y - ypos; // reversed since y-coordinates go from bottom to top
 
-    last_x = xpos;
-    last_y = ypos;
+void cursor_position_callback(GLFWwindow* window, double x, double y)
+{
+	static float xbegin, ybegin, xend, yend;
 
-    p_render_scene->camera_.ProcessMouseMovement(xoffset, yoffset);
+	if (begin == true)
+	{
+		xbegin = x;
+		ybegin = y;
+		begin = false;
+	}
+	else
+	{
+		xend = x;
+		yend = y;
+		begin = true;
+
+		if (right_pressing == true)
+		{
+			p_render_scene->camera_.Rotate(xbegin - xend, ybegin - yend);
+		}
+	}
 }
 
 

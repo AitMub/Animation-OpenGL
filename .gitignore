@@ -361,3 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+Animation/imgui.cpp
+Animation/imgui.ini
+Animation/imgui_demo.cpp
+Animation/imgui_draw.cpp
+Animation/imgui_impl_glfw.cpp
+Animation/imgui_impl_opengl3.cpp
+Animation/imgui_tables.cpp
+Animation/imgui_widgets.cpp
