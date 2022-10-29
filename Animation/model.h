@@ -83,12 +83,12 @@ public:
         LoadModel(model_path);
     }
 
-    void CalcBoneTransform(float time) {
+    void CalcBoneTransform(float time, float weight) {
         time *= 1000;
         //float anim_time = fmod(time * anim->mTicksPerSecond , anim->mDuration / anim->mTicksPerSecond);
         float anim_time = fmod(time, vec_p_anims_[0]->total_frames_);
         // p_skeleton_->CalcBoneAnimTransform(*vec_p_anims_[0], anim_time, root_transform_);
-        p_skeleton_->BlendBoneAnimTransform(*vec_p_anims_[0], *vec_p_anims_[4], anim_time, 0.9, root_transform_);
+        p_skeleton_->BlendBoneAnimTransform(*vec_p_anims_[0], *vec_p_anims_[4], anim_time, weight, root_transform_);
     }
 
     void PlayAnimation(int anim_index, bool loop = true) {

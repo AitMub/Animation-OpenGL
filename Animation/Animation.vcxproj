@@ -78,7 +78,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Code\Utility\opengl\include;$(IncludePath)</IncludePath>
+    <IncludePath>D:\Code\Utility\opengl\include;D:\Code\Utility\opengl\include\imgui;$(IncludePath)</IncludePath>
     <LibraryPath>D:\Code\Utility\opengl\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -144,6 +144,13 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\Utility\opengl\glad-4.2\src\glad.c" />
     <ClCompile Include="animation.cpp" />
+    <ClCompile Include="imgui.cpp" />
+    <ClCompile Include="imgui_demo.cpp" />
+    <ClCompile Include="imgui_draw.cpp" />
+    <ClCompile Include="imgui_impl_glfw.cpp" />
+    <ClCompile Include="imgui_impl_opengl3.cpp" />
+    <ClCompile Include="imgui_tables.cpp" />
+    <ClCompile Include="imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="skeleton.cpp" />
     <ClCompile Include="utility\anim_math.cpp" />
@@ -155,6 +162,7 @@
     <ClInclude Include="light.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />
+    <ClInclude Include="render_parameter.h" />
     <ClInclude Include="render_scene.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="skeleton.h" />
