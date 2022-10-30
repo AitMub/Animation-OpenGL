@@ -23,7 +23,6 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 RenderScene* p_render_scene;
-RenderParameter* p_render_parameter;
 
 // timing
 float delta_time = 0.0f;
@@ -31,9 +30,9 @@ float last_frame = 0.0f;
 
 GLFWwindow* Init();
 bool SetGLState();
-void ShowFPS(GLFWwindow* window);
-void RenderUI(RenderParameter&);
-void Render(Shader&, const RenderScene&, const RenderParameter&);
+void ShowFPS(GLFWwindow*);
+void RenderUI(RenderScene&);
+void Render(Shader&, const RenderScene&);
 
 int main()
 {
@@ -45,7 +44,6 @@ int main()
     Shader shader("lighting.vs", "lighting.fs");
 
     p_render_scene = new RenderScene(Model("resource/T-Rex.glb"), Camera(glm::vec3(0.0f, 10.0f, 20.0f)));
-    p_render_parameter = new RenderParameter();
     
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -53,9 +51,9 @@ int main()
         ShowFPS(window);
         ProcessInput(window);
   
-        RenderUI(*p_render_parameter);
+        RenderUI(*p_render_scene);
 
-        Render(shader, *p_render_scene, *p_render_parameter);
+        Render(shader, *p_render_scene);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
@@ -68,12 +66,11 @@ int main()
     ImGui::DestroyContext();
 
     delete p_render_scene;
-    delete p_render_parameter;
     glfwTerminate();
     return 0;
 }
 
-void Render(Shader& shader, const RenderScene& render_scene, const RenderParameter & render_parameter) {
+void Render(Shader& shader, const RenderScene& render_scene) {
     glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -95,12 +92,16 @@ void Render(Shader& shader, const RenderScene& render_scene, const RenderParamet
     shader.setVec3("viewPos", p_render_scene->camera_.Position);
 
     // calculate bone transform matrix
-    p_render_scene->model_.CalcBoneTransform(static_cast<float>(glfwGetTime()), render_parameter.anim_blend_weight);
+    p_render_scene->model_.CalcBoneTransform(static_cast<float>(glfwGetTime()), render_scene.render_parameter_.blend_anim.anim_blend_weight);
     // render
     p_render_scene->model_.Draw(shader);
 }
 
-void RenderUI(RenderParameter& render_parameter) {
+void RenderUI(RenderScene& render_scene) {
+    RenderParameter& render_parameter = render_scene.render_parameter_;
+
+    if (render_parameter.have_animtion == false) return;
+
     // 启动ImGui框架
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -109,16 +110,52 @@ void RenderUI(RenderParameter& render_parameter) {
         //开始配置ImGui窗口
         //设置窗口属性
         ImGuiWindowFlags window_flags = 0;
-        window_flags |= ImGuiWindowFlags_NoResize;
+        //window_flags |= ImGuiWindowFlags_NoResize;
         window_flags |= ImGuiWindowFlags_NoMove;
         ImGui::Begin("PARAMETER SETTINGS", 0, window_flags);
 
-        ImGui::Text("Animation Blend Weight");
-        ImGui::SliderFloat(" ", &render_parameter.anim_blend_weight, 0.0f, 1.0f);
+        ImGui::Text("Animation List");
+        if(ImGui::BeginListBox(" "))
+        {
+            for (int i = 0; i < render_parameter.anim_names.size(); i++)
+            {
+                ImGui::Selectable(render_parameter.anim_names[i].c_str(), false);
+            }
+            ImGui::EndListBox();
+        }
+        ImGui::NewLine();
+
+        ImGui::SliderFloat("Speed", &render_parameter.play_speed, 0.0f, 2.0f);
+        ImGui::NewLine();
+
+        ImGui::Text("Animtion Mode");
+        int anim_play_mode = static_cast<int>(render_parameter.eanim_play_mode);
+        ImGui::RadioButton("Play Single Animtion", &anim_play_mode, static_cast<int>(EAnimtionPlayMode::eSingle));
+        ImGui::RadioButton("Blend Animtions", &anim_play_mode, static_cast<int>(EAnimtionPlayMode::eBlend));
+        ImGui::RadioButton("Transition Animtions", &anim_play_mode, static_cast<int>(EAnimtionPlayMode::eTransition));
+        render_parameter.eanim_play_mode = static_cast<EAnimtionPlayMode>(anim_play_mode);
+        ImGui::NewLine();
+
+        int anim_cnt = render_parameter.anim_names.size();
+        switch (render_parameter.eanim_play_mode)
+        {
+        case EAnimtionPlayMode::eSingle:
+            ImGui::SliderInt("Index", &render_parameter.play_single_anim.anim_index, 1, anim_cnt);
+            break;
+        case EAnimtionPlayMode::eBlend:
+            ImGui::SliderInt("Index1", &render_parameter.blend_anim.anim_index1, 1, anim_cnt);
+            ImGui::SliderInt("Index2", &render_parameter.blend_anim.anim_index2, 1, anim_cnt);
+            ImGui::SliderFloat(" ", &render_parameter.blend_anim.anim_blend_weight, 0.0f, 1.0f, "Blend Weight");
+            break;
+        case EAnimtionPlayMode::eTransition:
+            ImGui::SliderInt("Index1", &render_parameter.transition_anim.anim_index1, 1, anim_cnt);
+            ImGui::SliderInt("Index2", &render_parameter.transition_anim.anim_index2, 1, anim_cnt);
+            ImGui::SliderFloat(" ", &render_parameter.transition_anim.begin_trans_norm_time, 0.0f, 1.0f, "Transition Begin Time");
+        }
 
         ImGui::End();
     }
-    //ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
 
     ImGui::Render();
 }
@@ -164,7 +201,7 @@ GLFWwindow*  Init() {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
-    ImGui::StyleColorsLight();
+    ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init();
 
