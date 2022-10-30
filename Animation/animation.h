@@ -57,9 +57,9 @@ public:
 	const int total_frames_;
 	const float frame_per_sec_;
 
-	glm::vec3 GetPosition(const string& channel_name, float time) const;
-	glm::quat GetRotation(const string& channel_name, float time) const;
-	float GetScale(const string& channel_name, float time) const;
+	glm::vec3 GetPosition(const string& channel_name, float time, bool time_normalized = false) const;
+	glm::quat GetRotation(const string& channel_name, float time, bool time_normalized = false) const;
+	float GetScale(const string& channel_name, float time, bool time_normalized = false) const;
 private:
 	vector<Channel> vec_channels_;
 	unordered_map<string, unsigned int> channel_name_to_index_;
@@ -67,6 +67,8 @@ private:
 	int FindKey(const vector<PositionKeyFrame>& pos_channel, float time) const;
 	int FindKey(const vector<RotationKeyFrame>& rot_channel, float time) const;
 	int FindKey(const vector<ScaleKeyFrame>& scale_channel, float time) const;
+
+	inline float GetAnimTime(float time, bool time_normalized) const;
 };
 
 #endif

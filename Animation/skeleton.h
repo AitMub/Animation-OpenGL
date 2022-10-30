@@ -42,8 +42,9 @@ public:
 	void LoadSkeletonAndRetrieveVertexInfo(const aiMesh* const mesh, vector<Vertex>& vertices);
 	string SetBoneChildToParent(const unordered_map<string, string>& node_parent);
 
-	void CalcBoneAnimTransform(const Animation& animation, float time, const mat4& root_transform);
-	void BlendBoneAnimTransform(const Animation& anim1, const Animation& anim2, float normalized_time, float weight, const mat4& root_transform);
+	void CalcBoneAnimTransform(const Animation& animation, float time, bool time_normalized_, const mat4& root_transform = mat4(1.0f));
+	void TransitionAnim(const Animation& anim1, const Animation& anim2, float trans_begin_norm_time, float normalized_time, const mat4& root_transform = mat4(1.0f));
+	void BlendBoneAnimTransform(const Animation& anim1, const Animation& anim2, float normalized_time, float weight, const mat4& root_transform = mat4(1.0f));
 
 	vector<mat4> final_bone_transform_;
 private:

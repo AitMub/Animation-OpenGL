@@ -84,19 +84,39 @@ public:
     }
 
     void CalcBoneTransform(float time, float weight) {
-        time *= 1000;
-        //float anim_time = fmod(time * anim->mTicksPerSecond , anim->mDuration / anim->mTicksPerSecond);
-        float anim_time = fmod(time, vec_p_anims_[0]->total_frames_);
-        // p_skeleton_->CalcBoneAnimTransform(*vec_p_anims_[0], anim_time, root_transform_);
-        p_skeleton_->BlendBoneAnimTransform(*vec_p_anims_[0], *vec_p_anims_[4], anim_time, weight, root_transform_);
+        static int norm_time = 0;
+        norm_time++;
+        float n_t = norm_time / 1000.0f;
     }
 
-    void PlayAnimation(int anim_index, bool loop = true) {
-
+    void PlaySingleAnimation(int anim_index, float normalized_time) {
+        p_skeleton_->CalcBoneAnimTransform(*vec_p_anims_[anim_index], normalized_time, true, root_transform_);
     }
 
-    void BlendAnimation(int anim_index1, int anim_index2, bool loop = true) {
+    void BlendAnimation1D(int anim_index1, int anim_index2, float normalized_time, float weight) {
+        p_skeleton_->BlendBoneAnimTransform(*vec_p_anims_[anim_index1], *vec_p_anims_[anim_index2], normalized_time, weight, root_transform_);
+    }
 
+    void PlayAnimtionTransition(int anim_index1, int anim_index2, float normalized_time, float weight) {
+        p_skeleton_->TransitionAnim(*vec_p_anims_[anim_index1], *vec_p_anims_[anim_index2], weight, normalized_time, root_transform_);
+    }
+
+    bool HaveAnimation() {
+        return vec_p_anims_.size() > 0;
+    }
+
+    vector<string> GetAnimationNameList() {
+        if (HaveAnimation() == false)
+        {
+            return vector<string>();
+        }
+        
+        vector<string> animation_name_list;
+        for (int i = 0; i < vec_p_anims_.size(); i++)
+        {
+            animation_name_list.emplace_back(vec_p_anims_[i]->anim_name_);
+        }
+        return animation_name_list;
     }
 
     void Draw(Shader& shader) const {

@@ -77,6 +77,7 @@ void Render(Shader& shader, const RenderScene& render_scene) {
     // enable shader before setting uniforms
     shader.use();
 
+    // this should move to RenderScene Class
     // view/projection transformations
     mat4 projection = glm::perspective(glm::radians(p_render_scene->camera_.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
     mat4 view = p_render_scene->camera_.GetViewMatrix();
@@ -94,7 +95,7 @@ void Render(Shader& shader, const RenderScene& render_scene) {
     // calculate bone transform matrix
     p_render_scene->model_.CalcBoneTransform(static_cast<float>(glfwGetTime()), render_scene.render_parameter_.blend_anim.anim_blend_weight);
     // render
-    p_render_scene->model_.Draw(shader);
+    p_render_scene->Draw(shader);
 }
 
 void RenderUI(RenderScene& render_scene) {
@@ -140,17 +141,18 @@ void RenderUI(RenderScene& render_scene) {
         switch (render_parameter.eanim_play_mode)
         {
         case EAnimtionPlayMode::eSingle:
-            ImGui::SliderInt("Index", &render_parameter.play_single_anim.anim_index, 1, anim_cnt);
+            ImGui::SliderInt("Index", &render_parameter.play_single_anim.anim_index, 0, anim_cnt - 1);
             break;
         case EAnimtionPlayMode::eBlend:
-            ImGui::SliderInt("Index1", &render_parameter.blend_anim.anim_index1, 1, anim_cnt);
-            ImGui::SliderInt("Index2", &render_parameter.blend_anim.anim_index2, 1, anim_cnt);
+            ImGui::SliderInt("Index1", &render_parameter.blend_anim.anim_index1, 0, anim_cnt - 1);
+            ImGui::SliderInt("Index2", &render_parameter.blend_anim.anim_index2, 0, anim_cnt - 1);
             ImGui::SliderFloat(" ", &render_parameter.blend_anim.anim_blend_weight, 0.0f, 1.0f, "Blend Weight");
             break;
         case EAnimtionPlayMode::eTransition:
-            ImGui::SliderInt("Index1", &render_parameter.transition_anim.anim_index1, 1, anim_cnt);
-            ImGui::SliderInt("Index2", &render_parameter.transition_anim.anim_index2, 1, anim_cnt);
+            ImGui::SliderInt("Index1", &render_parameter.transition_anim.anim_index1, 0, anim_cnt - 1);
+            ImGui::SliderInt("Index2", &render_parameter.transition_anim.anim_index2, 0, anim_cnt - 1);
             ImGui::SliderFloat(" ", &render_parameter.transition_anim.begin_trans_norm_time, 0.0f, 1.0f, "Transition Begin Time");
+            break;
         }
 
         ImGui::End();

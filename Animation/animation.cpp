@@ -41,16 +41,18 @@ Animation::Animation(const aiAnimation * anim) :
 }
 
 
-glm::vec3 Animation::GetPosition(const string& channel_name, float time) const {
+glm::vec3 Animation::GetPosition(const string& channel_name, float time, bool time_normalized) const {
+	float anim_time = GetAnimTime(time, time_normalized);
+
 	unsigned int channel_index = channel_name_to_index_.find(channel_name)->second;
 	const Channel& channel = vec_channels_[channel_index];
 	
 	if (channel.position_channels_.size() > 1)
 	{
-		unsigned int curr_key = FindKey(channel.position_channels_, time);
+		unsigned int curr_key = FindKey(channel.position_channels_, anim_time);
 		float t1 = channel.position_channels_[curr_key].time;
 		float t2 = channel.position_channels_[curr_key + 1].time;
-		float factor = (time - t1) / (t2 - t1);
+		float factor = (anim_time - t1) / (t2 - t1);
 		return Interpolate(channel.position_channels_[curr_key].position,
 			channel.position_channels_[curr_key + 1].position,
 			factor);
@@ -64,16 +66,18 @@ glm::vec3 Animation::GetPosition(const string& channel_name, float time) const {
 		return vec3(1.0f);
 	}
 }
-glm::quat Animation::GetRotation(const string& channel_name, float time) const {
+glm::quat Animation::GetRotation(const string& channel_name, float time, bool time_normalized) const {
+	float anim_time = GetAnimTime(time, time_normalized);
+
 	unsigned int channel_index = channel_name_to_index_.find(channel_name)->second;
 	const Channel& channel = vec_channels_[channel_index];
 
 	if (channel.rotation_channels_.size() > 1)
 	{
-		unsigned int curr_key = FindKey(channel.rotation_channels_, time);
+		unsigned int curr_key = FindKey(channel.rotation_channels_, anim_time);
 		float t1 = channel.rotation_channels_[curr_key].time;
 		float t2 = channel.rotation_channels_[curr_key + 1].time;
-		float factor = (time - t1) / (t2 - t1);
+		float factor = (anim_time - t1) / (t2 - t1);
 		return Interpolate(channel.rotation_channels_[curr_key].quaternion,
 			channel.rotation_channels_[curr_key + 1].quaternion,
 			factor);
@@ -87,16 +91,18 @@ glm::quat Animation::GetRotation(const string& channel_name, float time) const {
 		return quat();
 	}
 }
-float Animation::GetScale(const string& channel_name, float time) const {
+float Animation::GetScale(const string& channel_name, float time, bool time_normalized) const {
+	float anim_time = GetAnimTime(time, time_normalized);
+
 	unsigned int channel_index = channel_name_to_index_.find(channel_name)->second;
 	const Channel& channel = vec_channels_[channel_index];
 
 	if (channel.scale_channels_.size() > 1)
 	{
-		unsigned int curr_key = FindKey(channel.scale_channels_, time);
+		unsigned int curr_key = FindKey(channel.scale_channels_, anim_time);
 		float t1 = channel.scale_channels_[curr_key].time;
 		float t2 = channel.scale_channels_[curr_key + 1].time;
-		float factor = (time - t1) / (t2 - t1);
+		float factor = (anim_time - t1) / (t2 - t1);
 		return Interpolate(channel.scale_channels_[curr_key].scale,
 			channel.scale_channels_[curr_key + 1].scale,
 			factor);
@@ -109,6 +115,11 @@ float Animation::GetScale(const string& channel_name, float time) const {
 	{
 		return 1.0f;
 	}
+}
+
+inline float Animation::GetAnimTime(float time, bool time_normalized) const {
+	float anim_time = time_normalized ? time * total_frames_ : time * frame_per_sec_;
+	return fmod(anim_time, total_frames_);
 }
 
 int Animation::FindKey(const vector<PositionKeyFrame>& channel, float time) const {
