@@ -56,10 +56,13 @@ public:
 	const string anim_name_;
 	const int total_frames_;
 	const float frame_per_sec_;
+	const float total_sec_;
 
-	glm::vec3 GetPosition(const string& channel_name, float time, bool time_normalized = false) const;
-	glm::quat GetRotation(const string& channel_name, float time, bool time_normalized = false) const;
-	float GetScale(const string& channel_name, float time, bool time_normalized = false) const;
+	float GetNormalizedTime(float time_in_seconds) const;
+
+	glm::vec3 GetPosition(const string& channel_name, float time, bool time_normalized = true) const;
+	glm::quat GetRotation(const string& channel_name, float time, bool time_normalized = true) const;
+	float GetScale(const string& channel_name, float time, bool time_normalized = true) const;
 private:
 	vector<Channel> vec_channels_;
 	unordered_map<string, unsigned int> channel_name_to_index_;

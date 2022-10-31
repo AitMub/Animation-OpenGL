@@ -4,7 +4,8 @@
 Animation::Animation(const aiAnimation * anim) :
 	anim_name_(anim->mName.data),
 	total_frames_(anim->mDuration),
-	frame_per_sec_(anim->mTicksPerSecond)
+	frame_per_sec_(anim->mTicksPerSecond),
+	total_sec_(anim->mDuration / anim->mTicksPerSecond)
 {
 	for (int i = 0; i < anim->mNumChannels; i++)
 	{
@@ -38,6 +39,12 @@ Animation::Animation(const aiAnimation * anim) :
 		vec_channels_.emplace_back(channel);
 		channel_name_to_index_[channel.name_] = i;
 	}
+}
+
+
+float Animation::GetNormalizedTime(float time_in_seconds) const {
+	time_in_seconds = fmod(time_in_seconds, total_sec_);
+	return time_in_seconds / total_sec_;
 }
 
 

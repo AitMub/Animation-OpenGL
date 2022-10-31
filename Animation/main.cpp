@@ -92,8 +92,6 @@ void Render(Shader& shader, const RenderScene& render_scene) {
     shader.setVec3("lightPos", p_render_scene->light_.pos_);
     shader.setVec3("viewPos", p_render_scene->camera_.Position);
 
-    // calculate bone transform matrix
-    p_render_scene->model_.CalcBoneTransform(static_cast<float>(glfwGetTime()), render_scene.render_parameter_.blend_anim.anim_blend_weight);
     // render
     p_render_scene->Draw(shader);
 }

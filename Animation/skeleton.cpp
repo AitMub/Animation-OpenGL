@@ -56,12 +56,12 @@ string Skeleton::SetBoneChildToParent(const unordered_map<string, string>& node_
 	return string();
 }
 
-void Skeleton::CalcBoneAnimTransform(const Animation& animation, float time, bool time_normalized, const mat4& root_transform) {
+void Skeleton::CalcBoneAnimTransform(const Animation& animation, float normalized_time, const mat4& root_transform) {
 	// calculate hierarchy transform
 	for (int i = 0; i < vec_bone_.size(); i++)
 	{
-		mat4 pos = glm::translate(mat4(1.0f), animation.GetPosition(vec_bone_[i].name, time, time_normalized));
-		mat4 rot = glm::mat4_cast(animation.GetRotation(vec_bone_[i].name, time, time_normalized));
+		mat4 pos = glm::translate(mat4(1.0f), animation.GetPosition(vec_bone_[i].name, normalized_time));
+		mat4 rot = glm::mat4_cast(animation.GetRotation(vec_bone_[i].name, normalized_time));
 		// mat4 scale = glm::scale(mat4(1.0f), vec3(animation.GetScale(vec_bone_[i].name, time)));
 
 		int parent_i = vec_bone_[i].parent_index;
@@ -83,7 +83,7 @@ void Skeleton::TransitionAnim(const Animation& anim1, const Animation& anim2, fl
 
 	if (normalized_time <= trans_begin_norm_time)
 	{
-		CalcBoneAnimTransform(anim1, normalized_time, true, root_transform);
+		CalcBoneAnimTransform(anim1, normalized_time, root_transform);
 	}
 	else if (normalized_time > trans_begin_norm_time && normalized_time <= 1)
 	{
@@ -115,7 +115,7 @@ void Skeleton::TransitionAnim(const Animation& anim1, const Animation& anim2, fl
 	}
 	else
 	{
-		CalcBoneAnimTransform(anim2, normalized_time - trans_begin_norm_time, true, root_transform);
+		CalcBoneAnimTransform(anim2, normalized_time - trans_begin_norm_time, root_transform);
 	}
 }
 
