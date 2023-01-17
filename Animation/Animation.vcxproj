@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="animation.h" />
+    <ClInclude Include="anim_ui_window.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="input_process.h" />
     <ClInclude Include="light.h" />
@@ -166,6 +167,8 @@
     <ClInclude Include="render_scene.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="skeleton.h" />
+    <ClInclude Include="ui_manager.h" />
+    <ClInclude Include="ui_window.h" />
     <ClInclude Include="utility\anim_math.h" />
   </ItemGroup>
   <ItemGroup>

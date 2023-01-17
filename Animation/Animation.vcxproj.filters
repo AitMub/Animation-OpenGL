@@ -86,6 +86,15 @@
     <ClInclude Include="render_parameter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="anim_ui_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="lighting.fs">
