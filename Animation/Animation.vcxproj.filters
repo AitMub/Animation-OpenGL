@@ -95,6 +95,9 @@
     <ClInclude Include="ui_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="render_volume.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="lighting.fs">

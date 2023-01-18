@@ -78,24 +78,31 @@ void Skeleton::CalcBoneAnimTransform(const Animation& animation, float normalize
 	}
 }
 
-void Skeleton::TransitionAnim(const Animation& anim1, const Animation& anim2, float trans_begin_norm_time, float normalized_time, const mat4& root_transform) {
-	normalized_time = fmod(normalized_time, 1.0f + trans_begin_norm_time);
+void Skeleton::TransitionAnim(const Animation& anim1, const Animation& anim2, float time_in_sec, float trans_begin_time_in_sec, const mat4& root_transform) {
+	float anim1_total_sec = anim1.total_sec_;
+	// error if trans_begin_time_in_sec > anim1_total_secs
 
-	if (normalized_time <= trans_begin_norm_time)
+	float anim2_total_sec = anim2.total_sec_;
+
+	time_in_sec = fmod(time_in_sec, trans_begin_time_in_sec + anim2_total_sec);
+
+	if (time_in_sec <= trans_begin_time_in_sec)
 	{
-		CalcBoneAnimTransform(anim1, normalized_time, root_transform);
+		CalcBoneAnimTransform(anim1, anim1.GetNormalizedTime(time_in_sec), root_transform);
 	}
-	else if (normalized_time > trans_begin_norm_time && normalized_time <= 1)
+	else if (time_in_sec > trans_begin_time_in_sec && time_in_sec <= anim1_total_sec)
 	{
 		for (int i = 0; i < vec_bone_.size(); i++)
 		{
-			mat4 pos1 = glm::translate(mat4(1.0f), anim1.GetPosition(vec_bone_[i].name, normalized_time, true));
-			mat4 rot1 = glm::mat4_cast(anim1.GetRotation(vec_bone_[i].name, normalized_time, true));
+			float anim1_normalize_time = anim1.GetNormalizedTime(time_in_sec);
+			mat4 pos1 = glm::translate(mat4(1.0f), anim1.GetPosition(vec_bone_[i].name, anim1_normalize_time, true));
+			mat4 rot1 = glm::mat4_cast(anim1.GetRotation(vec_bone_[i].name, anim1_normalize_time, true));
 
-			mat4 pos2 = glm::translate(mat4(1.0f), anim2.GetPosition(vec_bone_[i].name, normalized_time - trans_begin_norm_time, true));
-			mat4 rot2 = glm::mat4_cast(anim2.GetRotation(vec_bone_[i].name, normalized_time - trans_begin_norm_time, true));
+			float anim2_normalize_time = anim2.GetNormalizedTime(time_in_sec - trans_begin_time_in_sec);
+			mat4 pos2 = glm::translate(mat4(1.0f), anim2.GetPosition(vec_bone_[i].name, anim2_normalize_time, true));
+			mat4 rot2 = glm::mat4_cast(anim2.GetRotation(vec_bone_[i].name, anim2_normalize_time, true));
 
-			float weight = (normalized_time - trans_begin_norm_time) / (1.0f - trans_begin_norm_time);
+			float weight = (time_in_sec - trans_begin_time_in_sec) / (anim1_total_sec - trans_begin_time_in_sec);
 
 			pos1 = Interpolate(pos1, pos2, weight);
 			rot1 = Interpolate(rot1, rot2, weight);
@@ -115,7 +122,7 @@ void Skeleton::TransitionAnim(const Animation& anim1, const Animation& anim2, fl
 	}
 	else
 	{
-		CalcBoneAnimTransform(anim2, normalized_time - trans_begin_norm_time, root_transform);
+		CalcBoneAnimTransform(anim2, anim2.GetNormalizedTime(time_in_sec - trans_begin_time_in_sec), root_transform);
 	}
 }
 

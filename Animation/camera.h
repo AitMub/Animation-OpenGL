@@ -7,6 +7,12 @@
 
 #include <vector>
 
+#include <math.h>
+
+using glm::vec3;
+using glm::vec4;
+using glm::mat4;
+
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 enum Camera_Movement {
     FORWARD,
@@ -108,21 +114,26 @@ public:
 
     // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(float yoffset)
-    {
-        Zoom -= (float)yoffset;
-        if (Zoom < 1.0f)
-            Zoom = 1.0f;
-        if (Zoom > 45.0f)
-            Zoom = 45.0f; 
+    {   
+        Position += Front * (yoffset * 0.02f * ( log ( glm::distance(Position, glm::vec3(0.0f, 0.0f, 0.0f)) + 1) ) );
     }
 
     void Rotate(float angle_x, float angle_y) 
     {
-        glm::mat4 rotate_x = glm::rotate(glm::mat4(1.0f), glm::radians(angle_x * SENSITIVITY), glm::vec3(0.0f, 1.0f, 0.0f));
-        glm::vec4 pos = glm::vec4(Position, 1.0f);
-        Position = glm::vec3(pos * rotate_x);
-        Front = -Position;
+        mat4 rotate_x = glm::rotate(mat4(1.0f), glm::radians( -angle_x * SENSITIVITY), vec3(0.0f, 1.0f, 0.0f));
+        vec4 pos = vec4(Position, 1.0f) * rotate_x;
+        Position = vec3(pos);
 
+        vec3 rotate_y_axis = vec3(Position.z, 0.0f, -Position.x);
+        mat4 rotate_y = glm::rotate(mat4(1.0f), glm::radians( -angle_y * SENSITIVITY), rotate_y_axis);
+        pos = vec4(Position, 1.0f) * rotate_y;
+        // avoid turn over
+        if (dot(pos, vec4(0.0f, 0.0f, 1.0f, 0.0f)) > 2.0f)
+        {
+            Position = vec3(pos);
+        }
+        
+        Front = -Position;
         // updateCameraVectors();
     }
 

@@ -83,19 +83,17 @@ public:
         LoadModel(model_path);
     }
 
-    void PlaySingleAnimation(int anim_index, float speed) {
-        UpdateAnimTime(speed);
-        p_skeleton_->CalcBoneAnimTransform(*vec_p_anims_[anim_index], vec_p_anims_[anim_index]->GetNormalizedTime(anim_clock_), root_transform_);
+    void PlaySingleAnimation(int anim_index, float normalized_time) {
+        p_skeleton_->CalcBoneAnimTransform(*vec_p_anims_[anim_index], normalized_time, root_transform_);
     }
 
-    void BlendAnimation1D(int anim_index1, int anim_index2, float speed, float weight) {
-        UpdateAnimTime(speed);
-        p_skeleton_->BlendBoneAnimTransform(*vec_p_anims_[anim_index1], *vec_p_anims_[anim_index2], vec_p_anims_[anim_index1]->GetNormalizedTime(anim_clock_), weight, root_transform_);
+    void BlendAnimation1D(int anim_index1, int anim_index2, float normalized_time, float weight) {
+        p_skeleton_->BlendBoneAnimTransform(*vec_p_anims_[anim_index1], *vec_p_anims_[anim_index2], normalized_time, weight, root_transform_);
     }
 
-    void PlayAnimtionTransition(int anim_index1, int anim_index2, float speed, float weight) {
-        UpdateAnimTime(speed);
-        p_skeleton_->TransitionAnim(*vec_p_anims_[anim_index1], *vec_p_anims_[anim_index2], weight, vec_p_anims_[anim_index1]->GetNormalizedTime(anim_clock_), root_transform_);
+    // use real seconds in transition because these two animation should have same FPS 
+    void PlayAnimationTransition(int anim_index1, int anim_index2, float time_in_sec, float trans_begin_time_in_sec) {
+        p_skeleton_->TransitionAnim(*vec_p_anims_[anim_index1], *vec_p_anims_[anim_index2], time_in_sec, trans_begin_time_in_sec, root_transform_);
     }
 
     bool HaveAnimation() {
@@ -116,7 +114,21 @@ public:
         return animation_name_list;
     }
 
-    void Draw(Shader& shader) const {
+    vector<float> GetAnimationDurationList() {
+        if (HaveAnimation() == false)
+        {
+            return vector<float>();
+        }
+
+        vector<float> animation_duration_list;
+        for (int i = 0; i < vec_p_anims_.size(); i++)
+        {
+            animation_duration_list.emplace_back(vec_p_anims_[i]->total_sec_);
+        }
+        return animation_duration_list;
+    }
+    
+    void Draw(const Shader& shader) const {
         glUniformMatrix4fv(glGetUniformLocation(shader.ID, "bones"), 75, GL_FALSE, glm::value_ptr(p_skeleton_->final_bone_transform_[0]));
 
         for (unsigned int i = 0; i < vec_mesh_.size(); i++)
@@ -126,16 +138,6 @@ public:
     }
 
 private:
-    // time in seconds
-    float local_clock_ = 0.0f;
-    float anim_clock_ = 0.0f;
-
-    void UpdateAnimTime(float speed) {
-        float time_elapsed = glfwGetTime() - local_clock_;
-        anim_clock_ += speed * time_elapsed;
-        local_clock_ += time_elapsed;
-    }
-
     void LoadModel(const string& path) {
         Assimp::Importer importer;
         const aiScene * scene = importer.ReadFile(path, aiProcess_Triangulate 

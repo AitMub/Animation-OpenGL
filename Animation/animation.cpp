@@ -42,9 +42,9 @@ Animation::Animation(const aiAnimation * anim) :
 }
 
 
-float Animation::GetNormalizedTime(float time_in_seconds) const {
-	time_in_seconds = fmod(time_in_seconds, total_sec_);
-	return time_in_seconds / total_sec_;
+float Animation::GetNormalizedTime(float time_in_sec) const {
+	time_in_sec = fmod(time_in_sec, total_sec_);
+	return time_in_sec / total_sec_;
 }
 
 

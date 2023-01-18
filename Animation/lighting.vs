@@ -18,19 +18,21 @@ uniform mat4 bones[kMaxTotalBoneNums];
 
 void main()
 {
+    mat4 totalBoneTransform = mat4(0.0f);
     vec4 totalPosition = vec4(0.0f);
+
     for(int i = 0 ; i < 4 ; i++)
     {
         if(aBoneIDs[i] == -1)
             continue;
 
-        vec4 localPosition = bones[aBoneIDs[i]] * vec4(aPos,1.0f);
-        totalPosition += localPosition * aWeights[i];
-        vec3 localNormal = mat3(bones[aBoneIDs[i]]) * aNormal;
+        totalBoneTransform += bones[aBoneIDs[i]] * aWeights[i];
     }
 
+    totalPosition = totalBoneTransform *  vec4(aPos,1.0f);
+
     FragPos = vec3(model * totalPosition);
-    // Normal = (transpose(inverse(model)) * boneTransform * vec4(aNormal, 0.0)).xyz;
+    Normal = (transpose(inverse(model)) * totalBoneTransform * vec4(aNormal, 0.0)).xyz;
     TexCoords = aTexCoords;
     gl_Position = projection * view * model * totalPosition;
 }

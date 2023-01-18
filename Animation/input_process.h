@@ -11,7 +11,6 @@
 
 extern RenderScene* p_render_scene;
 
-
 bool left_pressing = false;
 bool right_pressing = false;
 bool begin = true;
@@ -24,7 +23,7 @@ void ProcessInput(GLFWwindow* window){
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        p_render_scene->camera_.ProcessKeyboard(FORWARD, delta_time);
+		p_render_scene->camera_.ProcessKeyboard(FORWARD, delta_time);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         p_render_scene->camera_.ProcessKeyboard(BACKWARD, delta_time);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
