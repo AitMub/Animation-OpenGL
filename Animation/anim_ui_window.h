@@ -33,24 +33,21 @@ public:
         }
         ImGui::NewLine();
 
-        ImGui::SliderFloat("Speed", &play_speed_, 0.0f, 3.0f);
-        ImGui::NewLine();
-
         ImGui::Text("Animation Mode");
         int anim_play_mode = static_cast<int>(render_parameter.eanim_play_mode);
         if (ImGui::RadioButton("Play Single Animtion", &anim_play_mode, static_cast<int>(EAnimtionPlayMode::eSingle)))
         {
-            render_parameter.play_single_anim = PlaySingleAnim();
+            render_parameter.play_single_anim_para = PlaySingleAnimParameter();
             play_anim_changed_ = true;
         }
         if (ImGui::RadioButton("Blend Animtions", &anim_play_mode, static_cast<int>(EAnimtionPlayMode::eBlend)))
         {
-            render_parameter.blend_anim = BlendAnim();
+            render_parameter.blend_anim_para = BlendAnimParameter();
             play_anim_changed_ = true;
         }
         if (ImGui::RadioButton("Transition Animtions", &anim_play_mode, static_cast<int>(EAnimtionPlayMode::eTransition)))
         {
-            render_parameter.transition_anim = TransitionAnim();
+            render_parameter.transition_anim_para = TransitionAnimParameter();
             play_anim_changed_ = true;
         }
         render_parameter.eanim_play_mode = static_cast<EAnimtionPlayMode>(anim_play_mode);
@@ -60,23 +57,23 @@ public:
         switch (render_parameter.eanim_play_mode)
         {
         case EAnimtionPlayMode::eSingle:
-            play_anim_changed_ = ImGui::SliderInt("Index", &render_parameter.play_single_anim.anim_index, 0, anim_cnt - 1);
-            GuiAnimationTimeLine(&render_parameter.play_single_anim.normalized_time, 1.0f, true);
+            play_anim_changed_ = ImGui::SliderInt("Index", &render_parameter.play_single_anim_para.anim_index, 0, anim_cnt - 1);
+            GuiAnimationTimeLine(&render_parameter.play_single_anim_para.normalized_time, 1.0f, true);
             break;
 
         case EAnimtionPlayMode::eBlend:
-            play_anim_changed_ = ImGui::SliderInt("Index1", &render_parameter.blend_anim.anim_index1, 0, anim_cnt - 1);
-            ImGui::SliderInt("Index2", &render_parameter.blend_anim.anim_index2, 0, anim_cnt - 1);
-            ImGui::SliderFloat("Weight", &render_parameter.blend_anim.anim_blend_weight, 0.0f, 1.0f);
-            GuiAnimationTimeLine(&render_parameter.blend_anim.normalized_time, 1.0f, true);
+            play_anim_changed_ = ImGui::SliderInt("Index1", &render_parameter.blend_anim_para.anim_index1, 0, anim_cnt - 1);
+            ImGui::SliderInt("Index2", &render_parameter.blend_anim_para.anim_index2, 0, anim_cnt - 1);
+            ImGui::SliderFloat("Weight", &render_parameter.blend_anim_para.anim_blend_weight, 0.0f, 1.0f);
+            GuiAnimationTimeLine(&render_parameter.blend_anim_para.normalized_time, 1.0f, true);
             break;
 
         case EAnimtionPlayMode::eTransition:
-            play_anim_changed_ = ImGui::SliderInt("Index1", &render_parameter.transition_anim.anim_index1, 0, anim_cnt - 1);
-            ImGui::SliderInt("Index2", &render_parameter.transition_anim.anim_index2, 0, anim_cnt - 1);
-            ImGui::SliderFloat("Transition Begin Time", &render_parameter.transition_anim.begin_trans_time_in_sec, 0.0f, anim_duration_);
-            GuiAnimationTimeLine(&render_parameter.transition_anim.time_in_sec, 
-                render_parameter.transition_anim.begin_trans_time_in_sec + render_parameter.anim_durations[render_parameter.transition_anim.anim_index2], false);
+            play_anim_changed_ = ImGui::SliderInt("Index1", &render_parameter.transition_anim_para.anim_index1, 0, anim_cnt - 1);
+            ImGui::SliderInt("Index2", &render_parameter.transition_anim_para.anim_index2, 0, anim_cnt - 1);
+            ImGui::SliderFloat("Transition Begin Time", &render_parameter.transition_anim_para.begin_trans_time_in_sec, 0.0f, anim_duration_);
+            GuiAnimationTimeLine(&render_parameter.transition_anim_para.time_in_sec, 
+                render_parameter.transition_anim_para.begin_trans_time_in_sec + render_parameter.anim_durations[render_parameter.transition_anim_para.anim_index2], false);
             break;
         }
 
@@ -130,15 +127,15 @@ private:
         switch (render_parameter.eanim_play_mode)
         {
         case EAnimtionPlayMode::eSingle:
-            anim_duration_ = render_parameter.anim_durations[render_parameter.play_single_anim.anim_index];
+            anim_duration_ = render_parameter.anim_durations[render_parameter.play_single_anim_para.anim_index];
             break;
 
         case EAnimtionPlayMode::eBlend:
-            anim_duration_ = render_parameter.anim_durations[render_parameter.blend_anim.anim_index1];
+            anim_duration_ = render_parameter.anim_durations[render_parameter.blend_anim_para.anim_index1];
             break;
 
         case EAnimtionPlayMode::eTransition:
-            anim_duration_ = render_parameter.anim_durations[render_parameter.transition_anim.anim_index1];
+            anim_duration_ = render_parameter.anim_durations[render_parameter.transition_anim_para.anim_index1];
             break;
         }
 
@@ -148,7 +145,6 @@ private:
     bool play_anim_changed_ = true;
 
     bool auto_play_ = true;
-    float play_speed_ = 1.0f;
 
     float anim_duration_ = 0.0f;
     float anim_normalized_time_ = 0.0f;

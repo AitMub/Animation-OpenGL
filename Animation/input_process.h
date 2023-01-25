@@ -5,8 +5,6 @@
 
 #include <iostream>
 
-#include "camera.h"
-#include "model.h"
 #include "render_scene.h"
 
 extern RenderScene* p_render_scene;

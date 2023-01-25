@@ -152,6 +152,7 @@
     <ClCompile Include="imgui_tables.cpp" />
     <ClCompile Include="imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="model.cpp" />
     <ClCompile Include="skeleton.cpp" />
     <ClCompile Include="utility\anim_math.cpp" />
   </ItemGroup>
@@ -171,6 +172,7 @@
     <ClInclude Include="ui_manager.h" />
     <ClInclude Include="ui_window.h" />
     <ClInclude Include="utility\anim_math.h" />
+    <ClInclude Include="utility\file_loader.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="lighting.fs" />

@@ -11,8 +11,7 @@
 
 #include "shader.h"
 
-// could change to constexpr?
-const int kMaxBonePerVertex = 4;
+constexpr int kMaxBonePerVertex = 4;
 
 struct Vertex 
 {
@@ -49,7 +48,6 @@ public:
     vector<Texture>      textures_;
     unsigned int VAO_;
 
-    // should change to rvalue ctor
     Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures) {
         vertices_ = vertices;
         indices_ = indices;
@@ -68,7 +66,9 @@ public:
 
         for (unsigned int i = 0; i < textures_.size(); i++)
         {
-            glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
+            // active proper texture unit before binding
+            glActiveTexture(GL_TEXTURE0 + i);
+
             // retrieve texture number (the N in diffuse_textureN)
             string number;
             string name = textures_[i].type;
@@ -90,15 +90,15 @@ public:
         // draw mesh
         glBindVertexArray(VAO_);
         glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices_.size()), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
 
         // set everything back to defaults once configured.
+        glBindVertexArray(0);
         glActiveTexture(GL_TEXTURE0);
     }
 
 private:
-    // render data 
-    unsigned int VBO_, EBO_;
+    unsigned int VBO_;
+    unsigned int EBO_;
 
     // initializes all the buffer objects/arrays
     void SetupMesh() {

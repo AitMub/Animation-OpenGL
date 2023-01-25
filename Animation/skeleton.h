@@ -40,19 +40,22 @@ public:
 	Skeleton();
 
 	void LoadSkeletonAndRetrieveVertexInfo(const aiMesh* const mesh, vector<Vertex>& vertices);
-	string SetBoneChildToParent(const unordered_map<string, string>& node_parent);
+	void SetBoneChildToParent(const unordered_map<string, string>& node_parent);
+	Bone GetRootBone() const;
 
 	void CalcBoneAnimTransform(const Animation& animation, float time, const mat4& root_transform = mat4(1.0f));
 	void TransitionAnim(const Animation& anim1, const Animation& anim2, float trans_begin_norm_time, float normalized_time, const mat4& root_transform = mat4(1.0f));
 	void BlendBoneAnimTransform(const Animation& anim1, const Animation& anim2, float normalized_time, float weight, const mat4& root_transform = mat4(1.0f));
-
-	vector<mat4> final_bone_transform_;
+	
+	const vector<mat4>& GetFinalBoneTransform() const;
 private:
 	vector<Bone> vec_bone_;
-	int bone_nums_;
 	unordered_map<string, int> bone_name_to_index_;
 
+	vector<mat4> final_bone_transform_;
+
 	void SetVertexBoneInfo(Vertex& vertex, unsigned int bone_index, float weight) const;
+	void CalculateFinalTransform();
 };
 
 #endif

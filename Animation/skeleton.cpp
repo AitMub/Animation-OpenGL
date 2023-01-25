@@ -2,7 +2,6 @@
 #include"utility/anim_math.h"
 
 Skeleton::Skeleton() :
-	bone_nums_(0),
 	vec_bone_(),
 	bone_name_to_index_() {}
 
@@ -15,7 +14,7 @@ void Skeleton::LoadSkeletonAndRetrieveVertexInfo(const aiMesh* const mesh, vecto
 
 		if (bone_name_to_index_.find(bone_name) == bone_name_to_index_.end())
 		{
-			bone_index = bone_nums_++;
+			bone_index = vec_bone_.size();
 			aiMatrix4x4 ai_mat_bone_offset = mesh->mBones[i]->mOffsetMatrix;
 			vec_bone_.emplace_back(Convert<mat4>(ai_mat_bone_offset), mat4(1.0f), -1, bone_name);
 			bone_name_to_index_[bone_name] = bone_index;
@@ -25,7 +24,7 @@ void Skeleton::LoadSkeletonAndRetrieveVertexInfo(const aiMesh* const mesh, vecto
 			bone_index = bone_name_to_index_[bone_name];
 		}
 
-		// 为这个bone影响的所有顶点设置权重数据
+		// set weights for all vertices affected by this bone
 		for (unsigned int j = 0; j < mesh->mBones[i]->mNumWeights; j++)
 		{
 			unsigned int vertex_id = mesh->mBones[i]->mWeights[j].mVertexId;
@@ -35,7 +34,20 @@ void Skeleton::LoadSkeletonAndRetrieveVertexInfo(const aiMesh* const mesh, vecto
 	}
 }
 
-string Skeleton::SetBoneChildToParent(const unordered_map<string, string>& node_parent) {
+void Skeleton::SetVertexBoneInfo(Vertex& vertex, unsigned int bone_index, float weight) const {
+	for (unsigned int i = 0; i < kMaxBonePerVertex; i++)
+	{
+		if (vertex.bone_id[i] == -1)
+		{
+			vertex.bone_id[i] = bone_index;
+			vertex.weights[i] = weight;
+			return;
+		}
+	}
+}
+
+
+void Skeleton::SetBoneChildToParent(const unordered_map<string, string>& node_parent) {
 	for (const auto& iter : node_parent)
 	{
 		if (bone_name_to_index_.find(iter.first) != bone_name_to_index_.end()
@@ -44,43 +56,69 @@ string Skeleton::SetBoneChildToParent(const unordered_map<string, string>& node_
 			vec_bone_[bone_name_to_index_[iter.first]].parent_index = bone_name_to_index_[iter.second];
 		}
 	}
+}
 
-	// return bone root
+
+Bone Skeleton::GetRootBone() const {
 	for (const auto& bone : vec_bone_)
 	{
 		if (bone.parent_index == -1)
 		{
-			return bone.name;
+			return bone;
 		}
 	}
-	return string();
+	throw string("Didn't find root bone for skeleton");
 }
+
+
 
 void Skeleton::CalcBoneAnimTransform(const Animation& animation, float normalized_time, const mat4& root_transform) {
 	// calculate hierarchy transform
+	// parent's index is necessarily smaller than child's
 	for (int i = 0; i < vec_bone_.size(); i++)
 	{
 		mat4 pos = glm::translate(mat4(1.0f), animation.GetPosition(vec_bone_[i].name, normalized_time));
 		mat4 rot = glm::mat4_cast(animation.GetRotation(vec_bone_[i].name, normalized_time));
-		// mat4 scale = glm::scale(mat4(1.0f), vec3(animation.GetScale(vec_bone_[i].name, time)));
+		mat4 scale = glm::scale(mat4(1.0f), vec3(animation.GetScale(vec_bone_[i].name, normalized_time)));
 
 		int parent_i = vec_bone_[i].parent_index;
-		// check if this bone have parent
 		mat4 parent_mat = parent_i >= 0 ? vec_bone_[parent_i].transform : root_transform;
-		vec_bone_[i].transform = parent_mat * pos * rot;
+		vec_bone_[i].transform = parent_mat * pos * rot * scale;
 	}
 
-	// calculate final transform
-	final_bone_transform_.resize(vec_bone_.size());
+	CalculateFinalTransform();
+}
+
+void Skeleton::BlendBoneAnimTransform(const Animation& anim1, const Animation& anim2, float normalized_time, float weight, const mat4& root_transform) {
+	// calculate hierarchy transform
 	for (int i = 0; i < vec_bone_.size(); i++)
 	{
-		final_bone_transform_[i] = vec_bone_[i].transform * vec_bone_[i].offset;
+		mat4 pos1 = glm::translate(mat4(1.0f), anim1.GetPosition(vec_bone_[i].name, normalized_time));
+		mat4 rot1 = glm::mat4_cast(anim1.GetRotation(vec_bone_[i].name, normalized_time));
+		mat4 scale1 = glm::scale(mat4(1.0f), vec3(anim1.GetScale(vec_bone_[i].name, normalized_time)));
+
+		mat4 pos2 = glm::translate(mat4(1.0f), anim2.GetPosition(vec_bone_[i].name, normalized_time));
+		mat4 rot2 = glm::mat4_cast(anim2.GetRotation(vec_bone_[i].name, normalized_time));
+		mat4 scale2 = glm::scale(mat4(1.0f), vec3(anim2.GetScale(vec_bone_[i].name, normalized_time)));
+
+		pos1 = Interpolate(pos1, pos2, weight);
+		rot1 = Interpolate(rot1, rot2, weight);
+		scale1 = Interpolate(scale1, scale2, weight);
+
+		int parent_i = vec_bone_[i].parent_index;
+		mat4 parent_mat = parent_i >= 0 ? vec_bone_[parent_i].transform : root_transform;
+		vec_bone_[i].transform = parent_mat * pos1 * rot1 * scale1;
 	}
+
+	CalculateFinalTransform();
 }
 
 void Skeleton::TransitionAnim(const Animation& anim1, const Animation& anim2, float time_in_sec, float trans_begin_time_in_sec, const mat4& root_transform) {
 	float anim1_total_sec = anim1.total_sec_;
-	// error if trans_begin_time_in_sec > anim1_total_secs
+	if (trans_begin_time_in_sec > anim1_total_sec)
+	{
+		throw string("Transition time error, transition begin time > animation1 total time");
+	}
 
 	float anim2_total_sec = anim2.total_sec_;
 
@@ -95,30 +133,27 @@ void Skeleton::TransitionAnim(const Animation& anim1, const Animation& anim2, fl
 		for (int i = 0; i < vec_bone_.size(); i++)
 		{
 			float anim1_normalize_time = anim1.GetNormalizedTime(time_in_sec);
-			mat4 pos1 = glm::translate(mat4(1.0f), anim1.GetPosition(vec_bone_[i].name, anim1_normalize_time, true));
-			mat4 rot1 = glm::mat4_cast(anim1.GetRotation(vec_bone_[i].name, anim1_normalize_time, true));
+			mat4 pos1 = glm::translate(mat4(1.0f), anim1.GetPosition(vec_bone_[i].name, anim1_normalize_time));
+			mat4 rot1 = glm::mat4_cast(anim1.GetRotation(vec_bone_[i].name, anim1_normalize_time));
+			mat4 scale1 = glm::scale(mat4(1.0f), vec3(anim1.GetScale(vec_bone_[i].name, anim1_normalize_time)));
 
 			float anim2_normalize_time = anim2.GetNormalizedTime(time_in_sec - trans_begin_time_in_sec);
-			mat4 pos2 = glm::translate(mat4(1.0f), anim2.GetPosition(vec_bone_[i].name, anim2_normalize_time, true));
-			mat4 rot2 = glm::mat4_cast(anim2.GetRotation(vec_bone_[i].name, anim2_normalize_time, true));
+			mat4 pos2 = glm::translate(mat4(1.0f), anim2.GetPosition(vec_bone_[i].name, anim2_normalize_time));
+			mat4 rot2 = glm::mat4_cast(anim2.GetRotation(vec_bone_[i].name, anim2_normalize_time));
+			mat4 scale2 = glm::scale(mat4(1.0f), vec3(anim1.GetScale(vec_bone_[i].name, anim2_normalize_time)));
 
 			float weight = (time_in_sec - trans_begin_time_in_sec) / (anim1_total_sec - trans_begin_time_in_sec);
 
 			pos1 = Interpolate(pos1, pos2, weight);
 			rot1 = Interpolate(rot1, rot2, weight);
+			scale1 = Interpolate(scale1, scale2, weight);
 
 			int parent_i = vec_bone_[i].parent_index;
-			// check if this bone have parent
 			mat4 parent_mat = parent_i >= 0 ? vec_bone_[parent_i].transform : root_transform;
 			vec_bone_[i].transform = parent_mat * pos1 * rot1;
 		}
 
-		// calculate final transform
-		final_bone_transform_.resize(vec_bone_.size());
-		for (int i = 0; i < vec_bone_.size(); i++)
-		{
-			final_bone_transform_[i] = vec_bone_[i].transform * vec_bone_[i].offset;
-		}
+		CalculateFinalTransform();
 	}
 	else
 	{
@@ -126,26 +161,8 @@ void Skeleton::TransitionAnim(const Animation& anim1, const Animation& anim2, fl
 	}
 }
 
-void Skeleton::BlendBoneAnimTransform(const Animation& anim1, const Animation& anim2, float normalized_time, float weight, const mat4& root_transform) {
-	// calculate hierarchy transform
-	for (int i = 0; i < vec_bone_.size(); i++)
-	{
-		mat4 pos1 = glm::translate(mat4(1.0f), anim1.GetPosition(vec_bone_[i].name, normalized_time));
-		mat4 rot1 = glm::mat4_cast(anim1.GetRotation(vec_bone_[i].name, normalized_time));
 
-		mat4 pos2 = glm::translate(mat4(1.0f), anim2.GetPosition(vec_bone_[i].name, normalized_time));
-		mat4 rot2 = glm::mat4_cast(anim2.GetRotation(vec_bone_[i].name, normalized_time));
-
-		pos1 = Interpolate(pos1, pos2, weight);
-		rot1 = Interpolate(rot1, rot2, weight);
-
-		int parent_i = vec_bone_[i].parent_index;
-		// check if this bone have parent
-		mat4 parent_mat = parent_i >= 0 ? vec_bone_[parent_i].transform : root_transform;
-		vec_bone_[i].transform = parent_mat * pos1 * rot1;
-	}
-
-	// calculate final transform
+void Skeleton::CalculateFinalTransform() {
 	final_bone_transform_.resize(vec_bone_.size());
 	for (int i = 0; i < vec_bone_.size(); i++)
 	{
@@ -154,15 +171,6 @@ void Skeleton::BlendBoneAnimTransform(const Animation& anim1, const Animation& a
 }
 
 
-
-void Skeleton::SetVertexBoneInfo(Vertex& vertex, unsigned int bone_index, float weight) const {
-	for (unsigned int i = 0; i < kMaxBonePerVertex; i++)
-	{
-		if (vertex.bone_id[i] == -1)
-		{
-			vertex.bone_id[i] = bone_index;
-			vertex.weights[i] = weight;
-			return;
-		}
-	}
+const vector<mat4>& Skeleton::GetFinalBoneTransform() const {
+	return final_bone_transform_;
 }

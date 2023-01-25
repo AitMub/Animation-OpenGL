@@ -11,13 +11,13 @@ enum class EAnimtionPlayMode
 	eTransition
 };
 
-struct PlaySingleAnim
+struct PlaySingleAnimParameter
 {
 	int anim_index = 0;
 	float normalized_time = 0.0f;
 };
 
-struct BlendAnim
+struct BlendAnimParameter
 {
 	int anim_index1 = 0;
 	int anim_index2 = 0;
@@ -25,7 +25,7 @@ struct BlendAnim
 	float normalized_time = 0.0f;
 };
 
-struct TransitionAnim
+struct TransitionAnimParameter
 {
 	int anim_index1 = 0;
 	int anim_index2 = 0;
@@ -43,9 +43,9 @@ struct RenderParameter
 
 	union
 	{
-		PlaySingleAnim play_single_anim;
-		BlendAnim blend_anim;
-		TransitionAnim transition_anim;
+		PlaySingleAnimParameter play_single_anim_para;
+		BlendAnimParameter blend_anim_para;
+		TransitionAnimParameter transition_anim_para;
 	};
 
 	RenderParameter(bool _have_animation, const std::vector<std::string>& _anim_names, const std::vector<float>& _anim_durations)

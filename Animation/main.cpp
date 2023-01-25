@@ -11,11 +11,6 @@
 
 #include <iostream>
 
-#include "shader.h"
-#include "camera.h"
-#include "model.h"
-#include "render_scene.h"
-#include "render_parameter.h"
 #include "input_process.h"
 #include "ui_manager.h"
 #include "anim_ui_window.h"
@@ -28,10 +23,11 @@ float delta_time;
 float last_frame;
 
 GLFWwindow* Init();
-bool SetGLState();
+void SetGLState();
 void MainLoop(GLFWwindow*, RenderScene&, UIManager&);
 void ShowFPS(GLFWwindow*);
-void Render(RenderScene&);
+void PlayAnimation(RenderScene&);
+void Render(const RenderScene&);
 
 // used to be accessed by glfw callback functions
 RenderScene* p_render_scene = nullptr;
@@ -73,6 +69,7 @@ void MainLoop(GLFWwindow* window, RenderScene& render_scene, UIManager& ui_manag
         ProcessInput(window);
 
         ui_manager.RenderWindows(render_scene.render_parameter_);
+        PlayAnimation(render_scene);
         Render(render_scene);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -81,8 +78,11 @@ void MainLoop(GLFWwindow* window, RenderScene& render_scene, UIManager& ui_manag
     }
 }
 
-// 暂时设置为非const, 因为Draw函数内部还会更新model的骨骼, 这部分可以单独分离出一个非const的函数
-void Render(RenderScene& render_scene) {
+void PlayAnimation(RenderScene& render_scene) {
+    render_scene.CalculateModelAnimationPose();
+}
+
+void Render(const RenderScene& render_scene) {
     glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -90,7 +90,6 @@ void Render(RenderScene& render_scene) {
 }
 
 GLFWwindow*  Init() {
-    // glfw initialize and configure
     if (glfwInit() == false)
     {
         throw string("glfw Init Failed");
@@ -100,7 +99,6 @@ GLFWwindow*  Init() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_SAMPLES, 4);
 
-    // glfw window creation
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Animation", NULL, NULL);
     if (window == NULL)
     {
@@ -108,7 +106,6 @@ GLFWwindow*  Init() {
         throw string("glfw Window Creation Failed");
     }
 
-    // set callback function
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
@@ -117,7 +114,6 @@ GLFWwindow*  Init() {
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
-    // glad: load all OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         throw string("glad Init Failed");
@@ -126,7 +122,7 @@ GLFWwindow*  Init() {
     return window;
 }
 
-bool SetGLState() {
+void SetGLState() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
 
@@ -136,12 +132,7 @@ bool SetGLState() {
     GLenum error = glGetError();
     if (error != GL_NO_ERROR)
     {
-        std::cout << "gl error code: " << error << std::endl;
-        return false;
-    }
-    else
-    {
-        return true;
+        throw string("Opengl Error, Error Code: " + std::to_string(error));
     }
 }
 

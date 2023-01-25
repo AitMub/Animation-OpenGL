@@ -36,6 +36,8 @@ Animation::Animation(const aiAnimation * anim) :
 			channel.scale_channels_.emplace_back(scale_key);
 		}
 
+		// ToDo: Channel Compress
+
 		vec_channels_.emplace_back(channel);
 		channel_name_to_index_[channel.name_] = i;
 	}
@@ -129,6 +131,7 @@ inline float Animation::GetAnimTime(float time, bool time_normalized) const {
 	return fmod(anim_time, total_frames_);
 }
 
+// TODO: eliminate duplicated code without using polymorphism
 int Animation::FindKey(const vector<PositionKeyFrame>& channel, float time) const {
 	for (unsigned int i = 0; i < channel.size() - 1; i++)
 	{

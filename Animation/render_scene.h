@@ -25,27 +25,26 @@ public:
 			render_volume.near_z, render_volume.far_z);
 	}
 
-	void Draw() { 
-		PassUniforms();
-
+	void CalculateModelAnimationPose() {
 		if (render_parameter_.have_animtion == true)
 		{
 			switch (render_parameter_.eanim_play_mode)
 			{
 			case EAnimtionPlayMode::eSingle:
-				model_.PlaySingleAnimation(render_parameter_.play_single_anim.anim_index, render_parameter_.play_single_anim.normalized_time);
+				model_.PlaySingleAnimation(render_parameter_.play_single_anim_para);
 				break;
 			case EAnimtionPlayMode::eBlend:
-				model_.BlendAnimation1D(render_parameter_.blend_anim.anim_index1, render_parameter_.blend_anim.anim_index2,
-					render_parameter_.blend_anim.normalized_time, render_parameter_.blend_anim.anim_blend_weight);
+				model_.BlendAnimation1D(render_parameter_.blend_anim_para);
 				break;
 			case EAnimtionPlayMode::eTransition:
-				model_.PlayAnimationTransition(render_parameter_.transition_anim.anim_index1, render_parameter_.transition_anim.anim_index2,
-					render_parameter_.transition_anim.time_in_sec, render_parameter_.transition_anim.begin_trans_time_in_sec);
+				model_.PlayAnimationTransition(render_parameter_.transition_anim_para);
 				break;
 			}
 		}
+	}
 
+	void Draw() const { 
+		PassUniforms();
 		model_.Draw(shader_);
 	}
 
@@ -66,9 +65,6 @@ private:
 	mat4 projection_mat_;
 
 	mat4 model_mat_ = mat4(1.0f);
-	mat4 model_translation_ = mat4(1.0f);
-	mat4 model_scale_ = mat4(1.0f);
-	mat4 model_rotate_ = mat4(1.0f);
 
 	void PassUniforms() const {
 		shader_.setMat4("projection", projection_mat_);
@@ -79,6 +75,12 @@ private:
 		shader_.setVec3("lightPos", light_.pos_);
 
 		shader_.setVec3("viewPos", camera_.Position);
+
+		if (render_parameter_.have_animtion == true)
+		{
+			glUniformMatrix4fv(glGetUniformLocation(shader_.ID, "bones"), 75, 
+				GL_FALSE, glm::value_ptr(model_.GetSkeletonTransformMatsRef()[0]));
+		}
 	}
 };
 #endif

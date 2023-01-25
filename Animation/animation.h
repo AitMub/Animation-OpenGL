@@ -15,23 +15,27 @@ using std::vector;
 using std::string;
 using std::unordered_map;
 
+// if using polymorphism, we need use vector<KeyFrame*> to store all key frame,
+// considering the amount of key frame, the additional memory to store pointers
+// may be relatively large, so I did't choose to use polymorphism
+struct KeyFrame
+{
+	float time;
+};
 
-struct PositionKeyFrame
+struct PositionKeyFrame : KeyFrame
 {
 	glm::vec3 position;
-	float time;
 };
 
-struct RotationKeyFrame
+struct RotationKeyFrame : KeyFrame
 {
 	glm::quat quaternion;
-	float time;
 };
 
-struct ScaleKeyFrame
+struct ScaleKeyFrame : KeyFrame
 {
 	float scale; // uniform
-	float time;
 };
 
 struct Channel
@@ -42,11 +46,6 @@ struct Channel
 	vector<ScaleKeyFrame> scale_channels_;
 };
 
-struct AnimState
-{
-	enum EState {eSoloPlaying, eBlending, eTransitioning};
-	bool looping;
-};
 
 class Animation
 {
